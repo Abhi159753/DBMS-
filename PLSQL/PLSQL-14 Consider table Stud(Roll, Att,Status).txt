@@ -1,0 +1,92 @@
+a:
+
+use mydb;
+
+CREATE TABLE student (Roll INT PRIMARY KEY, Att DECIMAL(5,2), Status VARCHAR(5));
+
+INSERT INTO student (Roll, Att, Status) VALUES (101, 68.5, NULL),(102, 82.0, NULL),(103, 74.0, NULL),(104, 91.0, NULL);
+
+DELIMITER //
+
+CREATE PROCEDURE Check_Attendance(IN roll_no INT)
+BEGIN
+    DECLARE v_att DECIMAL(5,2);
+    DECLARE msg VARCHAR(50);
+    DECLARE exit handler FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'Error: Invalid Roll number or other issue' AS Message;
+    END;
+
+    SELECT Att INTO v_att 
+    FROM student 
+    WHERE Roll = roll_no;
+
+    IF v_att < 75 THEN
+        SET msg = 'Term not granted';
+        UPDATE student SET Status = 'D' WHERE Roll = roll_no;
+    ELSE
+        SET msg = 'Term granted';
+        UPDATE student SET Status = 'ND' WHERE Roll = roll_no;
+    END IF;
+
+    SELECT msg AS Message;
+END//
+
+DELIMITER ;
+
+CALL Check_Attendance(101);
+
+SELECT * FROM student;
+
+
+b:
+
+CREATE TABLE account_master (acno INT PRIMARY KEY, balance DECIMAL(10,2));
+INSERT INTO account_master VALUES (101, 5000.00), (102, 2500.00), (103, 1200.00);
+
+
+DELIMITER //
+
+CREATE PROCEDURE Withdraw_Amount(IN p_acno INT, IN p_amt DECIMAL(10,2))
+BEGIN
+    DECLARE v_bal DECIMAL(10,2);
+    DECLARE msg VARCHAR(100);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'Error: Unexpected database issue.' AS Message;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    SELECT balance INTO v_bal 
+    FROM account_master 
+    WHERE acno = p_acno;
+
+    IF v_bal IS NULL THEN
+        SET msg = 'Error: Account number not found.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSEIF p_amt > v_bal THEN
+        SET msg = 'Error: Insufficient balance. Withdrawal denied.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSE
+        UPDATE account_master
+        SET balance = balance - p_amt
+        WHERE acno = p_acno;
+        COMMIT;
+        SET msg = CONCAT('Withdrawal of Rs.', p_amt, ' successful. Updated balance: ', v_bal - p_amt);
+        SELECT msg AS Message;
+    END IF;
+END//
+
+DELIMITER ;
+
+CALL Withdraw_Amount(101, 7000);
+
+CALL Withdraw_Amount(102, 500);
+
+SELECT * FROM account_master;
+

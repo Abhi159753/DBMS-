@@ -1,0 +1,126 @@
+a:
+
+use mydb
+
+CREATE TABLE client_master (client_id INT PRIMARY KEY, client_name VARCHAR(50), bal_due DECIMAL(10,2));
+
+INSERT INTO client_master VALUES (1, 'Amit Shah', 2500.00), (2, 'Riya Nair', -150.00), (3, 'Vikram Das', 0.00);
+
+DELIMITER //
+
+CREATE PROCEDURE Check_Balance(IN p_client_id INT)
+BEGIN
+    DECLARE v_bal_due DECIMAL(10,2);
+    DECLARE msg VARCHAR(100);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'Error: Unexpected database issue.' AS Message;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    SELECT bal_due INTO v_bal_due 
+    FROM client_master 
+    WHERE client_id = p_client_id;
+
+    IF v_bal_due IS NULL THEN
+        SET msg = 'Error: Client ID not found.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSEIF v_bal_due < 0 THEN
+        SET msg = 'Business Rule Violation: Balance due cannot be less than 0.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSE
+        SET msg = CONCAT('Balance check passed. Current balance due: ', v_bal_due);
+        SELECT msg AS Message;
+        COMMIT;
+    END IF;
+END//
+
+DELIMITER ;
+
+CALL Check_Balance(2);
+
+CALL Check_Balance(1);
+
+b:
+
+CREATE TABLE Borrow (Roll_no INT, Name VARCHAR(50), DateofIssue DATE, NameofBook VARCHAR(100), Status CHAR(1));
+
+CREATE TABLE Fine (Roll_no INT, Date DATE, Amt DECIMAL(10,2));
+
+INSERT INTO Borrow VALUES (101, 'Amit', '2024-10-01', 'DBMS Concepts', 'I'),(102, 'Riya', '2024-11-01', 'AI Basics', 'I'),(103, 'Vikram', '2024-09-15', 'C++ Mastery', 'I');
+
+DELIMITER //
+
+CREATE PROCEDURE Return_Book(IN p_roll_no INT, IN p_book_name VARCHAR(100))
+BEGIN
+    DECLARE v_date_issue DATE;
+    DECLARE v_days INT;
+    DECLARE v_fine DECIMAL(10,2);
+    DECLARE v_status CHAR(1);
+    DECLARE msg VARCHAR(200);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+    BEGIN
+        SELECT 'Error: Unexpected database issue occurred.' AS Message;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    SELECT DateofIssue, Status 
+    INTO v_date_issue, v_status
+    FROM Borrow
+    WHERE Roll_no = p_roll_no AND NameofBook = p_book_name;
+
+    IF v_date_issue IS NULL THEN
+        SET msg = 'Error: No record found for this Roll number and Book.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSEIF v_status = 'R' THEN
+        SET msg = 'This book is already returned.';
+        SELECT msg AS Message;
+        ROLLBACK;
+    ELSE
+        SET v_days = DATEDIFF(CURDATE(), v_date_issue);
+
+        IF v_days <= 15 THEN
+            SET v_fine = 0;
+        ELSEIF v_days > 15 AND v_days <= 30 THEN
+            SET v_fine = (v_days - 15) * 5;
+        ELSE
+            SET v_fine = (v_days - 30) * 50 + (15 * 5);
+        END IF;
+
+        UPDATE Borrow
+        SET Status = 'R'
+        WHERE Roll_no = p_roll_no AND NameofBook = p_book_name;
+
+        IF v_fine > 0 THEN
+            INSERT INTO Fine (Roll_no, Date, Amt)
+            VALUES (p_roll_no, CURDATE(), v_fine);
+            SET msg = CONCAT('Book returned with fine: Rs ', v_fine, '.');
+        ELSE
+            SET msg = 'Book returned successfully with no fine.';
+        END IF;
+
+        SELECT msg AS Message;
+        COMMIT;
+    END IF;
+END//
+
+DELIMITER ;
+
+CALL Return_Book(101, 'DBMS Concepts');
+
+SELECT * FROM Borrow;
+SELECT * FROM Fine;
+
+
+
+
+

@@ -1,0 +1,199 @@
+a:
+
+use mydb;
+
+CREATE TABLE account_master (
+    acc_no INT PRIMARY KEY,
+    name VARCHAR(50),
+    balance DECIMAL(10,2),
+    status VARCHAR(10),
+    last_transaction_date DATE
+);
+
+INSERT INTO account_master VALUES
+(101, 'Amit', 5000.00, 'Inactive', CURDATE() - INTERVAL 400 DAY),
+(102, 'Riya', 2500.00, 'Inactive', CURDATE() - INTERVAL 200 DAY),
+(103, 'Vikram', 1000.00, 'Active',  CURDATE() - INTERVAL 150 DAY),
+(104, 'Neha', 7000.00, 'Inactive', CURDATE() - INTERVAL 800 DAY);
+
+DELIMITER //
+
+CREATE PROCEDURE Activate_Accounts()
+BEGIN
+    DECLARE v_rows INT DEFAULT 0;
+    DECLARE msg VARCHAR(200);
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        SELECT 'Error: Unexpected database issue occurred.' AS Message;
+        ROLLBACK;
+    END;
+
+    START TRANSACTION;
+
+    UPDATE account_master
+    SET status = 'Active'
+    WHERE status = 'Inactive'
+    AND last_transaction_date <= (CURDATE() - INTERVAL 365 DAY);
+
+    SET v_rows = ROW_COUNT();
+
+    IF v_rows = 0 THEN
+        SET msg = 'No inactive accounts found for activation.';
+    ELSE
+        SET msg = CONCAT('Accounts successfully activated. Total accounts updated: ', v_rows);
+    END IF;
+
+    SELECT msg AS Message;
+
+    COMMIT;
+END//
+
+DELIMITER ;
+
+CALL Activate_Accounts();
+
+SELECT * FROM account_master;
+
+b:
+
+CREATE TABLE O_RollCall (
+    roll_no INT,
+    name VARCHAR(50),
+    att INT
+);
+
+CREATE TABLE N_RollCall (
+    roll_no INT,
+    name VARCHAR(50),
+    att INT
+);
+
+INSERT INTO O_RollCall VALUES (101, 'Amit', 85), (102, 'Riya', 90);
+
+INSERT INTO N_RollCall VALUES
+(102, 'Riya', 90),   
+(103, 'Vikram', 75), 
+(104, 'Neha', 95);   
+
+DELIMITER //
+
+CREATE PROCEDURE Merge_RollCall()
+BEGIN
+    DECLARE v_roll INT;
+    DECLARE v_name VARCHAR(50);
+    DECLARE v_att INT;
+    DECLARE v_exists INT DEFAULT 0;
+    DECLARE v_inserted INT DEFAULT 0;
+    DECLARE v_skipped INT DEFAULT 0;
+    DECLARE done INT DEFAULT 0;
+
+    DECLARE cur_new CURSOR FOR
+        SELECT roll_no, name, att FROM N_RollCall;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    START TRANSACTION;
+
+    OPEN cur_new;
+    read_loop: LOOP
+        FETCH cur_new INTO v_roll, v_name, v_att;
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT COUNT(*) INTO v_exists
+        FROM O_RollCall
+        WHERE roll_no = v_roll;
+
+        IF v_exists = 0 THEN
+            INSERT INTO O_RollCall (roll_no, name, att)
+            VALUES (v_roll, v_name, v_att);
+            SET v_inserted = v_inserted + 1;
+        ELSE
+            SET v_skipped = v_skipped + 1;
+        END IF;
+    END LOOP;
+
+    CLOSE cur_new;
+
+    COMMIT;
+
+    SELECT 
+        CONCAT('Data merge completed successfully. ',
+               'Records inserted: ', v_inserted,
+               ', Records skipped: ', v_skipped) AS Result;
+END//
+
+DELIMITER ;
+
+CALL Merge_RollCall();
+
+SELECT * FROM O_RollCall;
+
+c:
+
+CREATE TABLE emp (
+    e_no INT,
+    d_no INT,
+    salary DECIMAL(10,2)
+);
+
+CREATE TABLE dept_salary (
+    d_no INT,
+    avg_salary DECIMAL(10,2)
+);
+
+INSERT INTO emp VALUES
+(101, 10, 40000),
+(102, 10, 45000),
+(103, 20, 30000),
+(104, 20, 35000),
+(105, 30, 60000);
+
+DELIMITER //
+
+CREATE PROCEDURE Calc_Dept_Avg_Salary()
+BEGIN
+    DECLARE v_dno INT;
+    DECLARE v_avg_salary DECIMAL(10,2);
+    DECLARE done INT DEFAULT 0;
+
+    DECLARE cur_dept CURSOR FOR
+        SELECT DISTINCT d_no FROM emp;
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+    START TRANSACTION;
+
+    OPEN cur_dept;
+    read_loop: LOOP
+        FETCH cur_dept INTO v_dno;
+        IF done = 1 THEN
+            LEAVE read_loop;
+        END IF;
+
+        SELECT AVG(salary)
+        INTO v_avg_salary
+        FROM emp
+        WHERE d_no = v_dno;
+
+        INSERT INTO dept_salary (d_no, avg_salary)
+        VALUES (v_dno, v_avg_salary);
+    END LOOP;
+
+    CLOSE cur_dept;
+
+    COMMIT;
+
+    SELECT 'Average salary by department inserted successfully.' AS Message;
+END//
+
+DELIMITER ;
+
+CALL Calc_Dept_Avg_Salary();
+SELECT * FROM dept_salary;
+
+
+
+
