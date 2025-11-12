@@ -1,0 +1,49 @@
+mongosh
+use test
+
+db.users.insertOne({id:0, name:"Leanne.flinn@unilogic.com",work:"Unilogic",age:27,gender:"Male",Salary:16660,hobbies:"Acrabatics,Photography,Papier-Mache"});
+
+const mapGender = function() {
+   if (this.gender !== undefined && this.gender !== null) {
+   emit(this.gender, 1);
+  }
+};
+
+const reduceSum = function(key, values) {
+   var total = 0;
+   for (var i = 0; i < values.length; i++) {
+     total += values[i];
+   }
+   return total;
+ };
+
+db.users.mapReduce(
+   mapGender,
+   reduceSum,
+   { out: { inline: 1 } }
+ )
+
+db.users.mapReduce(mapGender, reduceSum, { out: "gender_counts" });
+db.gender_counts.find().pretty()
+
+const mapHobbies = function() {
+   if (!this.hobbies) return;                     
+   if (Array.isArray(this.hobbies)) {
+     for (var i = 0; i < this.hobbies.length; i++) {
+       var h = this.hobbies[i];
+       if (h && typeof h === "string") {
+         var hh = h.trim();
+         if (hh.length) emit(hh, 1);
+       }
+     }
+   } else if (typeof this.hobbies === "string") {
+     var parts = this.hobbies.split(",");
+     for (var j = 0; j < parts.length; j++) {
+       var hobby = parts[j].trim();
+       if (hobby.length) emit(hobby, 1);
+     }
+   }
+ };
+
+db.users.mapReduce(mapHobbies, reduceSum, { out: "hobby_counts" });
+db.hobby_counts.find().sort({ value: -1 }).pretty()

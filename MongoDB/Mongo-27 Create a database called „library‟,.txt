@@ -1,0 +1,25 @@
+use library
+
+db.books.insertMany([{ title: "Data Structures in C", pages: 220 },{ title: "Operating System Concepts", pages: 350 },{ title: "Database System Design", pages: 280 },{ title: "Python Basics", pages: 180 },{ title: "Artificial Intelligence", pages: 420 },{ title: "Computer Networks", pages: 200 },{ title: "Web Technologies", pages: 260 }])
+
+db.books.find().pretty()
+
+const mapFn = function() {
+  if (this.pages <= 250) {
+    emit("Small Book", 1);
+  } else {
+    emit("Big Book", 1);
+  }
+};
+
+const reduceFn = function(key, values) {
+  return Array.sum(values);
+};
+
+db.books.mapReduce(
+  mapFn,
+  reduceFn,
+  { out: "bookSizeCount" }
+)
+
+db.bookSizeCount.find().pretty()

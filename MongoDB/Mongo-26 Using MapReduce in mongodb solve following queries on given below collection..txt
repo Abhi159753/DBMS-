@@ -1,0 +1,29 @@
+mongoimport --db test --collection zips --file "C:\Users\Abhijeet\Downloads\zip.json" --jsonArray
+
+use test
+db.zips.countDocuments()
+db.zips.findOne()
+
+const mapFn = function() {
+  if (!this.state) return;                     
+  let p = this.pop;
+  if (p == null) return;                       
+  if (typeof p === "string") {
+    p = parseFloat(p.replace(/,/g, ""));      
+    if (Number.isNaN(p)) return;
+  }
+  if (typeof p !== "number") return;           
+  emit(this.state, p);
+};
+
+const reduceFn = function(key, values) {
+  return Array.sum(values);                    
+};
+
+db.zips.mapReduce(
+  mapFn,
+  reduceFn,
+  { out: "statePopulation" }
+)
+
+db.statePopulation.find().sort({ value: -1 }).pretty()

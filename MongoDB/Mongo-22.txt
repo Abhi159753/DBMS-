@@ -1,0 +1,54 @@
+22. Create Database DYPIT using MongoDB Create following Collections Teachers(Tname,dno,dname,experience,salary,date_of_joining ) Students(Sname,roll_no,class)
+use DYPIT
+
+db.createCollection("Teachers")
+db.createCollection("Students")
+
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "COMP", experience: 5, salary: 30000, date_of_joining: "2019-06-15" },
+  { Tname: "Rajesh", dno: 2, dname: "IT", experience: 4, salary: 25000, date_of_joining: "2020-08-01" },
+  { Tname: "Sneha", dno: 3, dname: "E&TC", experience: 6, salary: 18000, date_of_joining: "2018-01-10" },
+  { Tname: "Neha", dno: 4, dname: "COMP", experience: 7, salary: 35000, date_of_joining: "2016-02-25" },
+  { Tname: "Amit", dno: 5, dname: "IT", experience: 8, salary: 27000, date_of_joining: "2017-11-05" }
+])
+
+db.Students.insertMany([
+  { Sname: "Amit", roll_no: 1, class: "FE" },
+  { Sname: "XYZ", roll_no: 2, class: "SE" },
+  { Sname: "Rohit", roll_no: 3, class: "TE" }
+])
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", avg_salary: { $avg: "$salary" } } }
+])
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", num_employees: { $sum: 1 } } }
+])
+
+db.Teachers.aggregate([
+  { $group: { _id: "$dname", total_salary: { $sum: "$salary" } } },
+  { $match: { total_salary: { $gte: 50000 } } }
+])
+
+db.Teachers.aggregate([
+  {
+    $group: {
+      _id: "$dname",
+      max_salary: { $max: "$salary" },
+      min_salary: { $min: "$salary" },
+      avg_salary: { $avg: "$salary" }
+    }
+  }
+])
+
+db.Teachers.createIndex({ Tname: 1 }, { unique: true })
+
+db.Teachers.createIndex({ dname: 1, experience: -1 })
+
+db.getCollectionNames().forEach(function(coll) {
+  print("Indexes for collection: " + coll)
+  printjson(db[coll].getIndexes())
+})
+
+db.Teachers.getIndexes()

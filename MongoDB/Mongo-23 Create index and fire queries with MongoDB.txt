@@ -1,0 +1,54 @@
+zip file:
+[
+  {
+    "city": "AGAWAM",
+    "loc": [-72.622739, 42.070206],
+    "pop": 15338,
+    "state": "MA"
+  },
+  {
+    "city": "CUSHMAN",
+    "loc": [-72.51565, 42.377017],
+    "pop": 36963,
+    "state": "MA"
+  },
+  {
+    "city": "TIMKEN",
+    "loc": [-99.155913, 38.467211],
+    "pop": 2000,
+    "state": "KS"
+  },
+  {
+    "city": "SALEM",
+    "loc": [-70.907501, 42.51954],
+    "pop": 40560,
+    "state": "MA"
+  },
+  {
+    "city": "WICHITA",
+    "loc": [-97.34, 37.68],
+    "pop": 390000,
+    "state": "KS"
+  },
+  {
+    "city": "TOPEKA",
+    "loc": [-95.68, 39.05],
+    "pop": 127000,
+    "state": "KS"
+  }
+]
+
+mongoimport --db test --collection zips --file "C:\Users\Abhijeet\Downloads\zip.json" --jsonArray
+
+mongosh
+
+use test
+
+db.zips.createIndex({ pop: 1 });
+db.zips.createIndex({ state: 1, pop: -1 });
+db.zips.createIndex({ loc: 1 });
+db.zips.createIndex({ city: 1 });
+db.zips.getIndexes();
+db.zips.find({ pop: { $gt: 1600 } }, { city: 1, state: 1, pop: 1, _id: 0 });
+db.zips.find({ state: "KS" }, { city: 1, pop: 1, _id: 0 });
+db.zips.find({ city: "TIMKEN" }, { city: 1, state: 1, loc: 1, _id: 0 }

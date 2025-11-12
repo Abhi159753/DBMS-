@@ -1,0 +1,37 @@
+19. Create Database DYPIT using MongoDB Create following Collections Teachers(Tname,dno,dname,experience,salary,date_of_joining ) Students(Sname,roll_no,class)
+use DYPIT
+db.createCollection("Teachers")
+db.createCollection("Students")
+db.Teachers.insertMany([
+  { Tname: "Praveen", dno: 1, dname: "COMP", experience: 5, salary: 12000, date_of_joining: "2019-06-15" },
+  { Tname: "Rajesh", dno: 2, dname: "IT", experience: 4, salary: 15000, date_of_joining: "2020-08-01" },
+  { Tname: "Sneha", dno: 3, dname: "E&TC", experience: 6, salary: 9500, date_of_joining: "2018-01-10" },
+  { Tname: "Neha", dno: 4, dname: "COMP", experience: 7, salary: 18000, date_of_joining: "2016-02-25" }
+])
+db.Students.insertMany([
+  { Sname: "Amit", roll_no: 1, class: "FE" },
+  { Sname: "XYZ", roll_no: 2, class: "SE" },
+  { Sname: "Rohit", roll_no: 3, class: "TE" }
+])
+db.Teachers.find()
+db.Teachers.find({ dname: "COMP" })
+db.Teachers.find({ dname: { $in: ["COMP", "IT", "E&TC"] } })
+db.Teachers.find({ dname: { $in: ["COMP", "IT", "E&TC"] }, salary: { $gte: 10000 } })
+db.Students.find({ $or: [ { roll_no: 2 }, { Sname: "xyz" } ] })
+db.Teachers.updateOne({ Tname: "Praveen" }, { $set: { experience: 10 } }, { upsert: true })
+db.Teachers.updateMany({ dname: "IT" }, { $set: { dname: "COMP" } })
+db.Teachers.find({}, { Tname: 1, experience: 1, _id: 0 })
+db.Department.insertOne({ dno: 10, dname: "Mechanical" })
+db.Teachers.updateOne(
+  { Tname: "Rajesh" },
+  { $set: {
+      dno: 2,
+      dname: "IT",
+      experience: 4,
+      salary: 15000,
+      date_of_joining: "2020-08-01"
+  }},
+  { upsert: true }
+)
+db.Teachers.deleteMany({ dname: "IT" })
+db.Teachers.find().sort({ Tname: 1 }).limit(3).pretty()

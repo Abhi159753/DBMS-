@@ -1,0 +1,29 @@
+24. Design and Implement following query using MongoDB
+use GameDB
+
+db.createCollection("games")
+
+db.games.insertMany([
+  { name: "Valorant", gametype: "Shooter", rating: 92 },
+  { name: "Minecraft", gametype: "Sandbox", rating: 95 },
+  { name: "GTA V", gametype: "Action", rating: 98 },
+  { name: "Need for Speed", gametype: "Racing", rating: 88 },
+  { name: "FIFA 24", gametype: "Sports", rating: 90 }
+])
+
+db.games.find()
+
+db.games.find().sort({ rating: -1 }).limit(3)
+
+db.games.updateMany(
+  { name: { $in: ["GTA V", "Minecraft"] } },
+  { $set: { achievements: ["Game Master", "Speed Demon"] } }
+)
+
+db.games.find({
+  achievements: { $all: ["Game Master", "Speed Demon"] }
+})
+
+db.games.find({
+  achievements: { $exists: true, $ne: [] }
+})
