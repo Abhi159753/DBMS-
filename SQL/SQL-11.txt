@@ -1,0 +1,78 @@
+CREATE DATABASE bank_system;
+USE bank_system;
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+INSERT INTO Branch VALUES
+('KAROLBAGH', 'Delhi'),
+('PERRYPARK', 'Pune'),
+('CAMP', 'Mumbai');
+
+INSERT INTO Customers VALUES
+('Anil', 'Delhi'),
+('Sunil', 'Pune'),
+('Ravi', 'Pune'),
+('Kiran', 'Mumbai');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'KAROLBAGH', 5000.00, '1997-01-10'),
+(102, 'Sunil', 'PERRYPARK', 4500.00, '1997-02-12'),
+(103, 'Ravi', 'PERRYPARK', 8000.00, '1997-03-20'),
+(104, 'Kiran', 'CAMP', 7000.00, '1996-12-25');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'KAROLBAGH', 3000.00),
+(202, 'Sunil', 'PERRYPARK', 2500.00);
+
+SELECT adate
+FROM Deposit
+WHERE cname = 'Anil';
+
+ALTER TABLE Deposit MODIFY amount DECIMAL(12,2);
+
+SELECT cname, city
+FROM Customers
+WHERE city = 'Pune';
+
+SELECT city
+FROM Branch
+WHERE bname = 'KAROLBAGH';
+
+SELECT COUNT(*) AS Total_Customers
+FROM Customers;
+
+DELETE FROM Customers
+WHERE cname = 'Sunil';
+
+CREATE VIEW Deposit_View AS
+SELECT actno, cname, bname, amount, adate
+FROM Deposit;
+
+SELECT * FROM Deposit_View;

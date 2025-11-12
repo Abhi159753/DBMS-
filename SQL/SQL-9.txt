@@ -1,0 +1,85 @@
+CREATE DATABASE bank_db;
+USE bank_db;
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+INSERT INTO Branch VALUES
+('Perryridge', 'New York'),
+('Downtown', 'Chicago'),
+('Brighton', 'Boston');
+
+INSERT INTO Customers VALUES
+('Anil', 'Delhi'),
+('Sunita', 'Mumbai'),
+('Ravi', 'Chennai'),
+('Kiran', 'Kolkata'),
+('John', 'New York');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'Perryridge', 5000.00, '1996-12-01'),
+(102, 'Sunita', 'Downtown', 7000.00, '1997-01-15'),
+(103, 'Ravi', 'Brighton', 3500.00, '1996-11-25'),
+(104, 'Kiran', 'Perryridge', 9000.00, '1997-03-20'),
+(105, 'John', 'Downtown', 1200.00, '1996-12-15');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'Perryridge', 3000.00),
+(202, 'Ravi', 'Brighton', 5000.00),
+(203, 'John', 'Downtown', 4500.00);
+
+SELECT cname, amount
+FROM Deposit
+WHERE amount > 4000;
+
+SELECT adate
+FROM Deposit
+WHERE cname = 'Anil';
+
+SELECT actno, amount
+FROM Deposit
+WHERE adate BETWEEN '1996-12-01' AND '1997-05-01';
+
+SELECT AVG(amount) AS Avg_Balance
+FROM Deposit
+WHERE bname = 'Perryridge';
+
+SELECT bname, AVG(amount) AS Avg_Balance
+FROM Deposit
+GROUP BY bname
+HAVING AVG(amount) > 1200;
+
+DELETE FROM Deposit
+WHERE amount < 5000;
+
+CREATE VIEW Deposit_View AS
+SELECT actno, cname, bname, amount
+FROM Deposit;
+
+SELECT * FROM Deposit_View;

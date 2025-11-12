@@ -1,0 +1,157 @@
+CREATE DATABASE book_management;
+USE book_management;
+
+CREATE TABLE Publisher (
+    PID INT PRIMARY KEY,
+    PName VARCHAR(50),
+    Address VARCHAR(100),
+    State VARCHAR(50),
+    Phone VARCHAR(15),
+    EmailID VARCHAR(50)
+);
+
+CREATE TABLE Book (
+    ISBN INT PRIMARY KEY,
+    Book_Title VARCHAR(100),
+    Category VARCHAR(50),
+    Price DECIMAL(10,2),
+    Copyright_Date DATE,
+    Year INT,
+    Page_Count INT,
+    PID INT,
+    FOREIGN KEY (PID) REFERENCES Publisher(PID)
+);
+
+CREATE TABLE Author (
+    AID INT PRIMARY KEY,
+    AName VARCHAR(50),
+    State VARCHAR(50),
+    City VARCHAR(50),
+    ZIP VARCHAR(10),
+    Phone VARCHAR(15),
+    URL VARCHAR(100)
+);
+
+CREATE TABLE Author_Book (
+    AID INT,
+    ISBN INT,
+    FOREIGN KEY (AID) REFERENCES Author(AID),
+    FOREIGN KEY (ISBN) REFERENCES Book(ISBN)
+);
+
+CREATE TABLE Review (
+    RID INT PRIMARY KEY,
+    ISBN INT,
+    Rating INT,
+    FOREIGN KEY (ISBN) REFERENCES Book(ISBN)
+);
+
+INSERT INTO Publisher VALUES
+(1, 'MEHTA', 'Andheri, Mumbai', 'Maharashtra', '9876543210', 'mehta@pub.com'),
+(2, 'OXFORD', 'Park Street, Kolkata', 'West Bengal', '9898989898', 'oxford@pub.com');
+
+INSERT INTO Book VALUES
+(101, 'Half Girlfriend', 'Romance', 450.00, '2014-05-01', 2014, 260, 1),
+(102, 'Five Point Someone', 'Fiction', 400.00, '2004-10-10', 2004, 250, 1),
+(103, 'Database System Concepts', 'Education', 850.00, '2010-01-01', 2010, 900, 2),
+(104, 'Short Stories', 'Literature', 200.00, '2018-05-10', 2018, 80, 1);
+
+INSERT INTO Author VALUES
+(1, 'CHETAN BHAGAT', 'Maharashtra', 'Mumbai', '400001', '9876500012', 'www.chetanbhagat.com'),
+(2, 'KORTH', 'Maharashtra', 'Pune', '411001', '9822200022', 'www.dbkorth.com'),
+(3, 'Chetan Desai', 'Maharashtra', 'Pune', '411045', '9876578901', 'www.desai.in'),
+(4, 'Ravi Mehta', 'Gujarat', 'Ahmedabad', '380001', '9800000000', 'www.ravimehta.in');
+
+INSERT INTO Author_Book VALUES
+(1, 101),
+(1, 102),
+(2, 103),
+(3, 104);
+
+INSERT INTO Review VALUES
+(1, 101, 5),
+(2, 102, 4),
+(3, 103, 5),
+(4, 104, 3);
+
+SELECT City, Phone, URL
+FROM Author
+WHERE AName = 'CHETAN BHAGAT';
+
+SELECT b.Book_Title, r.RID AS Review_ID, r.Rating
+FROM Book b
+LEFT JOIN Review r ON b.ISBN = r.ISBN;
+
+SELECT b.Book_Title, b.Price, a.AName, a.URL
+FROM Book b
+JOIN Author_Book ab ON b.ISBN = ab.ISBN
+JOIN Author a ON ab.AID = a.AID
+JOIN Publisher p ON b.PID = p.PID
+WHERE p.PName = 'MEHTA';
+
+UPDATE Publisher
+SET Phone = '123456'
+WHERE PName = 'MEHTA';
+
+SELECT p.PName,
+       AVG(b.Price) AS Avg_Price,
+       MAX(b.Price) AS Max_Price,
+       MIN(b.Price) AS Min_Price
+FROM Book b
+JOIN Publisher p ON b.PID = p.PID
+GROUP BY p.PName;
+
+DELETE FROM Review
+WHERE ISBN IN (SELECT ISBN FROM Book WHERE Page_Count < 100);
+
+DELETE FROM Author_Book
+WHERE ISBN IN (SELECT ISBN FROM Book WHERE Page_Count < 100);
+
+DELETE FROM Book
+WHERE Page_Count < 100;
+
+SELECT *
+FROM Author
+WHERE City = 'Pune'
+  AND AName LIKE 'C%';
+
+SELECT *
+FROM Author
+WHERE City = (SELECT City FROM Author WHERE AName = 'KORTH')
+  AND AName <> 'KORTH';
+
+DELIMITER $$
+
+CREATE PROCEDURE UpdatePageCount(IN isbn_no INT, IN new_pagecount INT)
+BEGIN
+    UPDATE Book
+    SET Page_Count = new_pagecount
+    WHERE ISBN = isbn_no;
+END $$
+
+DELIMITER ;
+
+CALL UpdatePageCount(103, 950);
+
+DELIMITER $$
+
+CREATE FUNCTION GetBookPrice(isbn_no INT)
+RETURNS DECIMAL(10,2)
+DETERMINISTIC
+BEGIN
+    DECLARE book_price DECIMAL(10,2);
+    SELECT Price INTO book_price FROM Book WHERE ISBN = isbn_no;
+    RETURN book_price;
+END $$
+
+DELIMITER ;
+SELECT GetBookPrice(101) AS Book_Price;
+
+
+
+
+
+
+
+
+

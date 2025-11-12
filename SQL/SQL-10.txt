@@ -1,0 +1,76 @@
+CREATE DATABASE bank_database;
+USE bank_database;
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+INSERT INTO Branch VALUES
+('Fort', 'Bombay'),
+('Andheri', 'Bombay'),
+('Perryridge', 'Delhi'),
+('M.G.Road', 'Pune');
+
+INSERT INTO Customers VALUES
+('Anil', 'Pune'),
+('Sunita', 'Mumbai'),
+('Ravi', 'Delhi'),
+('Kiran', 'Kolkata'),
+('John', 'Bombay');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'Fort', 7000.00, '1996-12-01'),
+(102, 'Sunita', 'Andheri', 8000.00, '1997-01-15'),
+(103, 'Ravi', 'Perryridge', 4500.00, '1997-02-10'),
+(104, 'Kiran', 'M.G.Road', 9000.00, '1997-03-25'),
+(105, 'John', 'Fort', 3000.00, '1996-11-10');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'Fort', 5000.00),
+(202, 'Ravi', 'Perryridge', 7000.00),
+(203, 'John', 'Andheri', 4000.00);
+
+SELECT bname 
+FROM Branch 
+WHERE city = 'Bombay';
+
+SELECT actno, amount 
+FROM Deposit;
+
+UPDATE Customers 
+SET city = 'Mumbai' 
+WHERE cname = 'Anil';
+
+SELECT COUNT(*) AS Total_Depositors 
+FROM Deposit;
+
+SELECT bname, AVG(amount) AS Avg_Deposit
+FROM Deposit
+GROUP BY bname;
+
+CREATE INDEX idx_deposit_amount ON Deposit(amount);

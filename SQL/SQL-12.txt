@@ -1,0 +1,89 @@
+CREATE DATABASE bank_project;
+USE bank_project;
+
+CREATE TABLE Branch (
+    bname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Customers (
+    cname VARCHAR(30) PRIMARY KEY,
+    city VARCHAR(30)
+);
+
+CREATE TABLE Deposit (
+    actno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    adate DATE,
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+CREATE TABLE Borrow (
+    loanno INT PRIMARY KEY,
+    cname VARCHAR(30),
+    bname VARCHAR(30),
+    amount DECIMAL(10,2),
+    FOREIGN KEY (cname) REFERENCES Customers(cname),
+    FOREIGN KEY (bname) REFERENCES Branch(bname)
+);
+
+INSERT INTO Branch VALUES
+('Fort', 'Bombay'),
+('Central', 'Nagpur'),
+('M.G.Road', 'Pune'),
+('ParkStreet', 'Kolkata');
+
+INSERT INTO Customers VALUES
+('Anil', 'Bombay'),
+('Sunil', 'Nagpur'),
+('Ravi', 'Nagpur'),
+('Kiran', 'Pune'),
+('John', 'Kolkata');
+
+INSERT INTO Deposit VALUES
+(101, 'Anil', 'Central', 5000.00, '1997-01-15'),
+(102, 'Sunil', 'Fort', 3000.00, '1997-02-12'),
+(103, 'Ravi', 'Central', 7000.00, '1997-03-05'),
+(104, 'Kiran', 'M.G.Road', 9000.00, '1997-04-10'),
+(105, 'John', 'ParkStreet', 8000.00, '1996-12-25');
+
+INSERT INTO Borrow VALUES
+(201, 'Anil', 'Fort', 2500.00),
+(202, 'Sunil', 'Central', 3500.00),
+(203, 'Ravi', 'Central', 5000.00),
+(204, 'Kiran', 'M.G.Road', 1000.00);
+
+SELECT d.cname
+FROM Deposit d
+JOIN Branch b1 ON d.bname = b1.bname
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'Bombay' AND b1.city = 'Nagpur';
+
+SELECT d.cname
+FROM Deposit d
+JOIN Branch b ON d.bname = b.bname
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = b.city;
+
+SELECT DISTINCT d.cname
+FROM Deposit d
+JOIN Borrow br ON d.cname = br.cname
+JOIN Customers c ON d.cname = c.cname
+WHERE c.city = 'Nagpur';
+
+SELECT DISTINCT br.cname
+FROM Borrow br
+JOIN Deposit d ON br.cname = d.cname
+WHERE d.amount > 1000 AND br.amount > 2000;
+
+SELECT c2.cname
+FROM Customers c1
+JOIN Deposit d ON c1.cname = d.cname
+JOIN Branch b ON d.bname = b.bname
+JOIN Customers c2 ON c2.city = b.city
+WHERE c1.cname = 'Sunil';
+
+CREATE INDEX idx_deposit_amount ON Deposit(amount);
